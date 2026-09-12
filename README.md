@@ -118,9 +118,9 @@ Every simulation cycle executes a **deterministic LangGraph execution graph** �
  detection   management   demand      V2G        carbon       balancing     P2P matching   mitigation
 ```
 
-### 🔬 These are REAL agents — proof in the Stress Test
+### 🔬 Robust Agentic workflow
 
-PowerWorker doesn't fake it with `if/else`. Under the hood, **live LLM agents reason, negotiate, and adapt.** Run the **Stress Simulation** and the WebSocket telemetry bus streams the agents' *actual* decisions in real time — for example:
+ **live LLM agents reason, negotiate, and adapt.** Run the **Stress Simulation** and the WebSocket telemetry bus streams the agents' *actual* decisions in real time — for example:
 
 ```log
 [Grid Agent]       Carbon intensity 512 gCO₂/kWh is high — prefer battery/solar over grid import.
