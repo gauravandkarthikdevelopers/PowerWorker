@@ -6,6 +6,7 @@ import CommunityScene from '../components/digitalTwin/CommunityScene';
 import { ScenarioControls } from '../components/dashboard/ScenarioControls';
 import HeroImpact from '../components/dashboard/HeroImpact';
 import StressOverlay from '../components/dashboard/StressOverlay';
+import CinematicOverlay from '../components/dashboard/CinematicOverlay';
 import EntityInspector from '../components/dashboard/EntityInspector';
 import TradingMarketplace from '../components/trading/TradingMarketplace';
 import GridPredictionPanel from '../components/prediction/GridPredictionPanel';
@@ -169,6 +170,7 @@ export default function Home() {
       <div style={{ flex: 1, height: '100%', position: 'relative', minWidth: 0 }}>
         <CommunityScene />
         <StressOverlay />
+        <CinematicOverlay />
       </div>
 
       {/* RIGHT — command center (hidden during stress simulation for a centered, cinematic view) */}

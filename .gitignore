@@ -3,6 +3,11 @@ node_modules/
 .env.local
 .env*.local
 *.env
+# Internal planning docs (not part of the shipped product)
+FUTURE_PLANS.md
+README.wip.md
+# Build artifacts / caches
+*.tsbuildinfo
 __pycache__/
 *.pyc
 .venv/

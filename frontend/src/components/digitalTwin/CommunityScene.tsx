@@ -4,6 +4,9 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import CommunityGrid from './CommunityGrid';
 import SceneProps from './SceneProps';
+import WorldMotion from './WorldMotion';
+import TradePopups from './TradePopups';
+import CameraDirector from './CameraDirector';
 import SolarFarm from './SolarFarm';
 import Battery from './Battery';
 import EVZone from './EVZone';
@@ -70,15 +73,26 @@ export default function CommunityScene() {
         {/* Cinematic P2P trade beams, price tags & node rings */}
         <EnergyBeams />
 
+        {/* Ambient motion: driving cars, drones, hub holo-rings, outage weather */}
+        <WorldMotion />
+
+        {/* Floating ₹ savings popups from selling houses */}
+        <TradePopups />
+
+        {/* Cinematic auto-camera during the stress simulation */}
+        <CameraDirector />
+
         {/* Camera interaction controls */}
-        <OrbitControls
-          enableDamping
-          dampingFactor={0.05}
-          maxPolarAngle={Math.PI / 2 - 0.05} // Don't let camera go below ground
-          minDistance={10}
-          maxDistance={65}
-          target={[0, 0, 0]}
-        />
+        {!stressActive && (
+          <OrbitControls
+            enableDamping
+            dampingFactor={0.05}
+            maxPolarAngle={Math.PI / 2 - 0.05}
+            minDistance={10}
+            maxDistance={65}
+            target={[0, 0, 0]}
+          />
+        )}
       </Canvas>
 
       {/* Floating Camera Help Tip Overlay - Neo-Brutalist Reskinned */}
