@@ -1,0 +1,144 @@
+#!/usr/bin/env bash
+#
+# start-project - boots the PowerWorker backend (FastAPI) + frontend (Next.js),
+# waits until both are healthy, then keeps them running together.
+# Press Ctrl+C once to shut BOTH down cleanly (no separate stop script needed).
+#
+#   Usage:  ./start-project
+#   Then open:  http://localhost:3000
+#
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+BACKEND_DIR="${ROOT}/backend"
+FRONTEND_DIR="${ROOT}/frontend"
+BACKEND_PORT=8000
+FRONTEND_PORT=3000
+
+# ---- pretty output ----
+c_reset=$'\033[0m'; c_cyan=$'\033[36m'; c_green=$'\033[32m'
+c_yellow=$'\033[33m'; c_red=$'\033[31m'; c_dim=$'\033[2m'
+log()  { printf "%s[powerworker]%s %s\n" "${c_cyan}"   "${c_reset}" "$*"; }
+ok()   { printf "%s[powerworker]%s %s\n" "${c_green}"  "${c_reset}" "$*"; }
+warn() { printf "%s[powerworker]%s %s\n" "${c_yellow}" "${c_reset}" "$*"; }
+err()  { printf "%s[powerworker]%s %s\n" "${c_red}"    "${c_reset}" "$*"; }
+
+BACK_PID=""
+FRONT_PID=""
+
+# Recursively kill a process and every child it spawned.
+kill_tree() {
+  local pid="$1"
+  [ -z "${pid}" ] && return 0
+  local child
+  for child in $(pgrep -P "${pid}" 2>/dev/null); do
+    kill_tree "${child}"
+  done
+  kill "${pid}" 2>/dev/null || true
+}
+
+cleanup() {
+  trap - INT TERM EXIT
+  echo
+  log "shutting down..."
+  kill_tree "${FRONT_PID}"
+  kill_tree "${BACK_PID}"
+  # belt-and-suspenders: free both ports in case a stray child lingers
+  lsof -ti tcp:"${FRONTEND_PORT}" 2>/dev/null | xargs kill 2>/dev/null || true
+  lsof -ti tcp:"${BACKEND_PORT}"   2>/dev/null | xargs kill 2>/dev/null || true
+  ok "stopped. bye"
+  exit 0
+}
+trap cleanup INT TERM EXIT
+
+free_port() {
+  local port="$1" pids
+  pids="$(lsof -ti tcp:"${port}" 2>/dev/null || true)"
+  if [ -n "${pids}" ]; then
+    warn "port ${port} busy - freeing it"
+    echo "${pids}" | xargs kill 2>/dev/null || true
+    sleep 1
+  fi
+}
+
+# ---- prerequisites ----
+command -v python3 >/dev/null 2>&1 || { err "python3 not found"; exit 1; }
+command -v npm     >/dev/null 2>&1 || { err "npm not found";     exit 1; }
+command -v curl    >/dev/null 2>&1 || { err "curl not found";    exit 1; }
+
+free_port "${BACKEND_PORT}"
+free_port "${FRONTEND_PORT}"
+
+# ---- backend deps (first run only) ----
+if [ ! -d "${BACKEND_DIR}/.venv" ]; then
+  log "creating backend virtualenv (first run)..."
+  python3 -m venv "${BACKEND_DIR}/.venv"
+  # shellcheck disable=SC1091
+  . "${BACKEND_DIR}/.venv/bin/activate"
+  log "installing backend deps..."
+  pip install -q --upgrade pip >/dev/null 2>&1 || true
+  pip install -q -r "${BACKEND_DIR}/requirements.txt"
+  deactivate
+fi
+
+# ---- frontend deps (first run only) ----
+if [ ! -d "${FRONTEND_DIR}/node_modules" ]; then
+  log "installing frontend deps (first run, may take a minute)..."
+  ( cd "${FRONTEND_DIR}" && npm install )
+fi
+
+# ---- start backend ----
+log "starting backend on port ${BACKEND_PORT}..."
+(
+  cd "${BACKEND_DIR}"
+  # shellcheck disable=SC1091
+  . .venv/bin/activate
+  exec uvicorn main:app --host 0.0.0.0 --port "${BACKEND_PORT}"
+) &
+BACK_PID=$!
+
+# ---- wait for backend health ----
+log "waiting for backend to be healthy..."
+for i in $(seq 1 60); do
+  if curl -sf "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; then
+    ai_status="$(curl -s "http://localhost:${BACKEND_PORT}/health" | grep -o '"ai_live":[a-z]*' || true)"
+    ok "backend healthy  (${ai_status:-ai:unknown})"
+    break
+  fi
+  if ! kill -0 "${BACK_PID}" 2>/dev/null; then err "backend crashed on startup"; exit 1; fi
+  sleep 0.5
+  if [ "${i}" -eq 60 ]; then err "backend did not come up in time"; exit 1; fi
+done
+
+# ---- start frontend ----
+log "starting frontend on port ${FRONTEND_PORT}..."
+(
+  cd "${FRONTEND_DIR}"
+  exec npm run dev
+) &
+FRONT_PID=$!
+
+# ---- wait for frontend ----
+log "waiting for frontend to compile..."
+for i in $(seq 1 120); do
+  if curl -sf "http://localhost:${FRONTEND_PORT}" >/dev/null 2>&1; then
+    ok "frontend ready"
+    break
+  fi
+  if ! kill -0 "${FRONT_PID}" 2>/dev/null; then err "frontend crashed on startup"; exit 1; fi
+  sleep 0.5
+done
+
+echo
+ok "PowerWorker is live"
+printf "   %s> App:%s   http://localhost:%s   %s(open this)%s\n" "${c_green}" "${c_reset}" "${FRONTEND_PORT}" "${c_dim}" "${c_reset}"
+printf "   %s> API:%s   http://localhost:%s/health\n" "${c_dim}" "${c_reset}" "${BACKEND_PORT}"
+printf "   %sPress Ctrl+C to stop both.%s\n" "${c_dim}" "${c_reset}"
+echo
+
+# ---- keep alive until Ctrl+C or a service dies ----
+while kill -0 "${BACK_PID}" 2>/dev/null && kill -0 "${FRONT_PID}" 2>/dev/null; do
+  sleep 1
+done
+warn "a service exited unexpectedly - shutting the other one down"
+cleanup

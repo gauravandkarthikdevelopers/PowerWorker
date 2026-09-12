@@ -1,0 +1,89 @@
+@import "tailwindcss";
+
+:root {
+  --background: #060a14;
+  --foreground: #e7f1ff;
+  --pw-cyan: #22d3ee;
+  --pw-green: #34d399;
+  --pw-amber: #fbbf24;
+  --pw-red: #fb7185;
+  --pw-violet: #a78bfa;
+  --pw-blue: #38bdf8;
+  --pw-panel: rgba(15, 23, 42, 0.66);
+  --pw-border: rgba(56, 189, 248, 0.16);
+  --pw-text-dim: #8091ab;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+html,
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), sans-serif;
+  overflow-x: hidden;
+}
+
+/* Ambient grid + radial glow backdrop for the whole app */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(1100px 600px at 15% -5%, rgba(34, 211, 238, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(167, 139, 250, 0.10), transparent 55%),
+    linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+}
+
+/* ---- Keyframes shared across the design system ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spinSlow 12s linear infinite; }
+
+@keyframes pw-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes pw-pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(251, 113, 133, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(251, 113, 133, 0); }
+}
+
+@keyframes pw-dash {
+  to { stroke-dashoffset: -24; }
+}
+
+@keyframes pw-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes pw-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.pw-blink { animation: pw-blink 1.4s ease-in-out infinite; }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.4); }
+::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, 0.45); }
