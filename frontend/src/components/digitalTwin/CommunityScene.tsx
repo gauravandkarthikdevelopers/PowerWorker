@@ -3,6 +3,7 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
 import CommunityGrid from './CommunityGrid';
+import SceneProps from './SceneProps';
 import SolarFarm from './SolarFarm';
 import Battery from './Battery';
 import EVZone from './EVZone';
@@ -50,6 +51,9 @@ export default function CommunityScene() {
 
         {/* 50 House Community Grid Layout */}
         <CommunityGrid />
+
+        {/* Ambient skyline, renewables & street life framing the community */}
+        <SceneProps />
 
         {/* Solar Farm panel array */}
         <SolarFarm />

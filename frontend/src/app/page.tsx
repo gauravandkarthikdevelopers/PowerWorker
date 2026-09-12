@@ -11,6 +11,7 @@ import TradingMarketplace from '../components/trading/TradingMarketplace';
 import GridPredictionPanel from '../components/prediction/GridPredictionPanel';
 import AgentConsole from '../components/agents/AgentConsole';
 import MicrogridTopology from '../components/topology/MicrogridTopology';
+import P2PSharingPanel from '../components/trading/P2PSharingPanel';
 import ChatPanel from '../components/chat/ChatPanel';
 import { Badge } from '../components/ui';
 import {
@@ -19,7 +20,7 @@ import {
 import { forecast24h } from '../data/mockData';
 import { useMemo, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Zap, ShieldAlert, Cpu, Network, Play, Sparkles } from 'lucide-react';
+import { Activity, Zap, ShieldAlert, Cpu, Network, Play, Sparkles, Radio } from 'lucide-react';
 import { useBackendHealth } from '../hooks/useBackendHealth';
 
 const T = {
@@ -48,11 +49,12 @@ const GRID_CAPACITY_KW = 200;
 const MIN_PANEL = 400;
 const DEFAULT_PANEL = 660;
 
-type TabKey = 'overview' | 'trading' | 'risk' | 'agents' | 'topology';
+type TabKey = 'overview' | 'trading' | 'p2plive' | 'risk' | 'agents' | 'topology';
 
 const TABS: Array<{ key: TabKey; label: string; icon: typeof Activity }> = [
   { key: 'overview', label: 'Overview', icon: Activity },
   { key: 'trading', label: 'P2P Trading', icon: Zap },
+  { key: 'p2plive', label: 'P2P Live', icon: Radio },
   { key: 'risk', label: 'Grid Risk', icon: ShieldAlert },
   { key: 'agents', label: 'Agents', icon: Cpu },
   { key: 'topology', label: 'Topology', icon: Network },
@@ -340,6 +342,7 @@ export default function Home() {
                       {tab === 'trading' && <TradingMarketplace />}
                       {tab === 'risk' && <GridPredictionPanel />}
                       {tab === 'agents' && <AgentConsole />}
+                      {tab === 'p2plive' && <P2PSharingPanel />}
                       {tab === 'topology' && <MicrogridTopology />}
                     </motion.div>
                   </AnimatePresence>
